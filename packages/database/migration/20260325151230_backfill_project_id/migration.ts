@@ -1,5 +1,3 @@
-/* eslint-disable no-constant-condition -- Required for the while loop */
-/* eslint-disable @typescript-eslint/no-unnecessary-condition -- Required for a while loop here */
 import { logger } from "@formbricks/logger";
 import type { MigrationScript } from "../../src/scripts/migration-runner";
 
@@ -17,40 +15,21 @@ const TABLES_TO_BACKFILL = [
   "ApiKeyEnvironment",
 ] as const;
 
-const BATCH_SIZE = 10_000;
-
 export const backfillProjectId: MigrationScript = {
   type: "data",
   id: "snae9apsx7e74yo9ncmhjl47",
   name: "20260325151230_backfill_project_id",
   run: async ({ tx }) => {
     for (const table of TABLES_TO_BACKFILL) {
-      let totalUpdated = 0;
+      const updatedRows = await tx.$executeRawUnsafe(`
+        UPDATE "${table}" t
+        SET "projectId" = e."projectId"
+        FROM "Environment" e
+        WHERE t."environmentId" = e."id"
+          AND t."projectId" IS NULL
+      `);
 
-      while (true) {
-        const updatedRows = await tx.$executeRawUnsafe(`
-          UPDATE "${table}" t
-          SET "projectId" = e."projectId"
-          FROM "Environment" e
-          WHERE t."environmentId" = e."id"
-            AND t."projectId" IS NULL
-            AND t.id IN (
-              SELECT id FROM "${table}"
-              WHERE "projectId" IS NULL
-              LIMIT ${BATCH_SIZE.toString()}
-            )
-        `);
-
-        totalUpdated += updatedRows;
-
-        if (updatedRows < BATCH_SIZE) {
-          break;
-        }
-
-        logger.info(`${table}: backfilled ${totalUpdated.toString()} rows so far...`);
-      }
-
-      logger.info(`Backfilled ${totalUpdated.toString()} rows in ${table}`);
+      logger.info(`Backfilled ${updatedRows.toString()} rows in ${table}`);
     }
 
     // Verify no rows were missed.

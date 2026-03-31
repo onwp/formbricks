@@ -98,16 +98,20 @@ Pass criteria:
   - at least one gateway-tagged response
   - no `429`s
   - no `5xx`s
+  - no `status_other` responses
 - `public` / `management` `burst`
   - at least one gateway `429`
   - zero app `429`s
+  - zero `5xx`s
+  - zero `status_other` responses
 - `public` / `management` `soak`
   - gateway path confirmed
   - at least one gateway `429`
   - zero app `429`s
   - zero `5xx`s
+  - zero `status_other` responses
 - `negative`
-  - zero `429`s and zero `5xx`s
+  - zero `429`s, zero `5xx`s, and zero `status_other` responses
 
 ## Shell scripts
 

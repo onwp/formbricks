@@ -203,20 +203,27 @@ function evaluateRun(data) {
   const gatewayLimited = metricCount(data, "gateway_429s");
   const appLimited = metricCount(data, "app_429s");
   const errors5xx = metricCount(data, "status_5xx");
+  const otherStatuses = metricCount(data, "status_other");
 
   if (SCENARIO === "negative") {
-    return total429s === 0 && errors5xx === 0;
+    return total429s === 0 && errors5xx === 0 && otherStatuses === 0;
   }
 
   if (PROFILE === "smoke") {
-    return gatewayTagged > 0 && total429s === 0 && errors5xx === 0;
+    return gatewayTagged > 0 && total429s === 0 && errors5xx === 0 && otherStatuses === 0;
   }
 
   if (PROFILE === "burst") {
-    return gatewayLimited > 0 && appLimited === 0;
+    return gatewayLimited > 0 && appLimited === 0 && errors5xx === 0 && otherStatuses === 0;
   }
 
-  return gatewayTagged > 0 && gatewayLimited > 0 && appLimited === 0 && errors5xx === 0;
+  return (
+    gatewayTagged > 0 &&
+    gatewayLimited > 0 &&
+    appLimited === 0 &&
+    errors5xx === 0 &&
+    otherStatuses === 0
+  );
 }
 
 function formatNumber(value) {
